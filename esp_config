@@ -1,0 +1,168 @@
+
+#include <Arduino.h>
+#include <WiFi.h>
+#include <WiFiUdp.h>
+
+// WiFi credentials
+const char *ssid = "Batman";
+const char *password = "mzzr0183";
+
+// UDP settings
+WiFiUDP Udp;
+unsigned int localPort = 8888; 
+
+const int IN3 = 15;   //B
+const int IN4 = 2;
+const int IN1 = 19;
+const int IN2 = 21;
+
+//const int IN7 = 33;
+//const int IN8 = 25;
+//const int IN5 = 27;
+//const int IN6 = 26;
+
+const int en1=18; //EA-B
+const int en2=4;  //EB- B
+//const int en3=14; //EA-F
+//const int en4=32; //EA-B
+
+const int dutyCycle = 255;
+/*const int TRIG_FRONT = 14;
+const int ECHO_FRONT = 27;
+*/
+
+// Function to move forward
+void move_forward() {
+  digitalWrite(en1, HIGH);
+  digitalWrite(en2, HIGH);
+  //digitalWrite(en3, HIGH);
+  //digitalWrite(en4, HIGH);
+
+  digitalWrite(IN1, HIGH);
+  digitalWrite(IN2, LOW);
+  digitalWrite(IN3, HIGH);
+  digitalWrite(IN4, LOW);
+
+  //digitalWrite(IN5, HIGH);
+  //digitalWrite(IN6, LOW);
+  //digitalWrite(IN7, HIGH);
+  //digitalWrite(IN8, LOW);
+
+
+  ledcWrite(0, dutyCycle);
+  ledcWrite(1, dutyCycle);
+  ledcWrite(2, dutyCycle);
+  ledcWrite(3, dutyCycle);
+
+
+
+
+}
+void move_backward() {
+  digitalWrite(en1, HIGH);
+  digitalWrite(en2, HIGH);
+  //digitalWrite(en3, HIGH);
+  //digitalWrite(en4, HIGH);
+
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, HIGH);
+  digitalWrite(IN3, LOW);
+  digitalWrite(IN4, HIGH);
+
+  //digitalWrite(IN5, LOW);
+  //digitalWrite(IN6, HIGH);
+  //digitalWrite(IN7, LOW);
+  //digitalWrite(IN8, HIGH);
+
+   ledcWrite(0, dutyCycle);
+  ledcWrite(1, dutyCycle);
+  ledcWrite(2, dutyCycle);
+  ledcWrite(3, dutyCycle);
+
+}
+
+
+// Function to stop the motors
+void stop() {
+  digitalWrite(en1, HIGH);
+  digitalWrite(en2, HIGH);
+  //digitalWrite(en3, HIGH);
+  //digitalWrite(en4, HIGH);
+
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, LOW);
+  digitalWrite(IN3, LOW);
+  digitalWrite(IN4, LOW);
+
+  //digitalWrite(IN5, LOW);
+  //digitalWrite(IN6, LOW);
+  //digitalWrite(IN7, LOW);
+  //digitalWrite(IN8, LOW);
+}
+/*
+long read_ultrasonic(int trig, int echo) {
+  digitalWrite(trig, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trig, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trig, LOW);
+
+  long duration = pulseIn(echo, HIGH);
+  long distance = (duration * 0.0343) / 2;  // Distance in cm
+  return distance;
+}
+*/
+void setup() {
+  // Motor pins setup
+  pinMode(IN1, OUTPUT);
+  pinMode(IN2, OUTPUT);
+  pinMode(IN3, OUTPUT);
+  pinMode(IN4, OUTPUT);
+  
+  //pinMode(IN5, OUTPUT);
+  //pinMode(IN6, OUTPUT);
+  //pinMode(IN7, OUTPUT);
+  //pinMode(IN8, OUTPUT);
+
+  Serial.begin(9600);  
+
+   WiFi.begin(ssid, password);
+    Serial.print("Connecting to WiFi...");
+    while (WiFi.status() != WL_CONNECTED) {
+        delay(500);
+        Serial.print(".");
+    }
+    Serial.println("\nConnected!");
+    Serial.print("ESP32 IP Address: ");
+    Serial.println(WiFi.localIP());
+
+    // Start UDP server
+    Udp.begin(localPort);
+    Serial.print("Listening on UDP port: ");
+    Serial.println(localPort);
+}
+
+void loop() {
+    int size = Udp.parsePacket();
+    uint8_t buf = 2;
+
+    if(size){
+      int len = Udp.read(&buf, 1);
+      Serial.println(buf);
+    }
+
+    if(buf==1){
+      move_forward();
+
+    }
+    else if(buf==0){
+      move_backward();
+    }
+    else{
+      stop();
+    }
+
+    
+
+    
+}
